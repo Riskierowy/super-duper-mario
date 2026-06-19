@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ═══════════════════════════════════════════════════════════
+       META I SEO
+  ════════════════════════════════════════════════════════════ -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Super Marian Delux" />
+  <meta name="keywords" content="mario, platformer, html5, canvas, javascript, gra przeglądarkowa" />
+  <meta name="author" content="Super Mario JS" />
+
+  <!-- Open Graph (podgląd w mediach społecznościowych) -->
+  <meta property="og:title" content="Super Marian Delux - najlepsza gra swiata ever" />
+  <meta property="og:description"
+    content="Klasyczny platformer w czystym JavaScript i HTML5 Canvas, i na 100% nie pomagalo nam ai" />
+  <meta property="og:type" content="website" />
+
+  <title>Super Marian Delux</title>
+
+  <!-- Favicon: kolorowa ikona kafelka -->
+  <link rel="icon" href="data:image/svg+xml,
+    %3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E
+      %3Crect width='32' height='32' rx='4' fill='%23F8B800'/%3E
+      %3Ctext x='16' y='23' font-size='20' text-anchor='middle'
+             font-family='monospace' fill='white'%3E%3F%3C/text%3E
+    %3C/svg%3E" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       EKRAN ŁADOWANIA (widoczny przed inicjalizacją JS)
+  ════════════════════════════════════════════════════════════ -->
+  <div id="initial-loader" role="status" aria-label="Ładowanie gry">
+
+    <!-- Logo z animowanych bloków -->
+    <div id="loader-logo" aria-hidden="true">
+      <div class="logo-block"></div>
+      <div class="logo-block"></div>
+      <div class="logo-block"></div>
+      <div class="logo-block"></div>
+      <div class="logo-block"></div>
+    </div>
+
+    <div id="loader-title">SUPER MARIAN DELUX</div>
+
+    <!-- Pasek postępu -->
+    <div id="loader-bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+      <div id="loader-bar"></div>
+    </div>
+
+    <div id="loader-text">WCZYTYWANIE...</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       GŁÓWNY KONTENER GRY
+  ════════════════════════════════════════════════════════════ -->
+  <div id="game-wrapper">
+
+    <!-- Nagłówek nad canvasem -->
+    <header id="game-header">
+      <h1 id="game-title">★ SUPER MARIAN DELUX</h1>
+      <span id="game-subtitle">HTML5 + VANILLA JS &nbsp;|&nbsp; BEZ BACKENDU</span>
+    </header>
+
+    <!-- Pasek zakładek (Tabs Bar) -->
+    <nav id="app-tabs" aria-label="Nawigacja główna">
+      <button class="tab-btn active" id="tab-game">🎮 GRA (GAME)</button>
+      <button class="tab-btn" id="tab-editor">🛠️ EDYTOR (EDITOR)</button>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         KONTENER GRY
+    ════════════════════════════════════════════════════════════ -->
+    <div id="game-container" class="tab-content">
+      <!-- Ramka ekranu gry -->
+      <div id="canvas-frame">
+
+        <!--
+          ┌────────────────────────────────────────────────────────┐
+          │  CANVAS – tutaj rysowana jest cała gra                 │
+          │                                                        │
+          │  Rozmiar ustawiony w config.js (CANVAS.WIDTH/HEIGHT)   │
+          │  Domyślnie: 800 × 480 px                               │
+          └────────────────────────────────────────────────────────┘
+        -->
+        <canvas id="gameCanvas" role="img" aria-label="Ekran gry Super Mariana DELUX" tabindex="0"></canvas>
+
+      </div><!-- /#canvas-frame -->
+
+      <!-- Panel z podpowiedziami sterowania -->
+      <footer id="game-footer" aria-label="Sterowanie">
+
+        <div class="key-hint">
+          <kbd class="key-badge" id="key-left">◄</kbd>
+          <kbd class="key-badge" id="key-right">►</kbd>
+          <span>move</span>
+        </div>
+
+        <div class="key-hint">
+          <kbd class="key-badge" id="key-up">w</kbd>
+          <span>jump</span>
+        </div>
+
+        <div class="key-hint">
+          <kbd class="key-badge" id="key-shift">SHIFT</kbd>
+          <span>run</span>
+        </div>
+
+        <div class="key-hint">
+          <kbd class="key-badge" id="key-esc">P</kbd>
+          <span>pause</span>
+        </div>
+
+      </footer><!-- /#game-footer -->
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         KONTENER EDYTORA POZIOMÓW
+    ════════════════════════════════════════════════════════════ -->
+    <div id="editor-container" class="tab-content hidden">
+      <!-- Panel górny: Parametry i akcje -->
+      <div class="editor-top-panel">
+        <div class="panel-row">
+          <div class="panel-group">
+            <label for="editor-level-select">LEVEL:</label>
+            <select id="editor-level-select" class="editor-select">
+              <option value="0">Poziom 1 (Zielona Łąka)</option>
+              <option value="1">Poziom 2 (Trudny Skok)</option>
+              <option value="2">Poziom 3 (Chmurowy Raj)</option>
+              <option value="3">Poziom 4 (Klasyk)</option>
+              <option value="4">Poziom 5 (Podziemia)</option>
+            </select>
+          </div>
+          <div class="panel-group">
+            <label for="editor-time-limit">TIME LIMIT:</label>
+            <input type="number" id="editor-time-limit" min="10" max="999" value="300" class="editor-input">
+          </div>
+          <div class="panel-group">
+            <label for="editor-map-cols">COLUMNS (WIDTH):</label>
+            <input type="number" id="editor-map-cols" min="25" max="250" value="80" class="editor-input">
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel-group toolbar-tools">
+            <button id="tool-pencil" class="editor-btn active" title="Pencil (Draw)">✏️Pencil</button>
+            <button id="tool-eraser" class="editor-btn" title="Eraser (Erase)">🧹Eraser</button>
+          </div>
+          <div class="panel-group toolbar-actions">
+            <button id="editor-btn-play" class="editor-btn btn-success" title="Play test level">🎮Play</button>
+            <button id="editor-btn-save" class="editor-btn btn-primary" title="Save in browser">💾Save</button>
+            <button id="editor-btn-export" class="editor-btn btn-info" title="Export level JS file">📥Export</button>
+            <button id="editor-btn-import-btn" class="editor-btn btn-secondary" title="Import JS/JSON file">📤Import</button>
+            <button id="editor-btn-reset" class="editor-btn btn-danger" title="Reset to default level">🔄Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Układ główny edytora: Paleta i płótno -->
+      <div class="editor-main-layout">
+        <!-- Paleta z lewej -->
+        <div class="editor-palette-container">
+          <div class="palette-title">KAFELKI</div>
+          <div class="palette-items" id="palette-tiles">
+            <!-- Tutaj zostaną wygenerowane kafelki przez JS -->
+          </div>
+          <div class="palette-title" style="margin-top: 12px;">PRZECIWNICY</div>
+          <div class="palette-items" id="palette-enemies">
+            <!-- Tutaj zostaną wygenerowani przeciwnicy przez JS -->
+          </div>
+        </div>
+
+        <!-- Płótno z prawej -->
+        <div class="editor-viewport-frame">
+          <div id="editor-viewport">
+            <canvas id="editorCanvas" height="480"></canvas>
+          </div>
+          <div class="editor-status-bar">
+            <span id="editor-status-coords">Kursor: --</span>
+            <span id="editor-status-info">Maluj lewym przyciskiem myszy. Prawy przycisk to gumka. Klikaj wroga, aby ustawić lewy/prawy kraniec patrolu.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wersja -->
+    <div id="game-version">v1.6.7 &nbsp;·&nbsp; 2026 &nbsp;·&nbsp; PURE JS</div>
+
+  </div><!-- /#game-wrapper -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SKRYPTY GIERKI – kolejność MUSI być taka:
+       1. config.js  – stałe konfiguracyjne
+       2. level.js   – klasa Level (kafelki, kolizje)
+       3. player.js  – klasa Player
+       4. enemy.js   – klasy Enemy / Goomba / Koopa / EnemyManager
+       5. game.js    – klasy InputManager / SpriteRenderer /
+                       ParticleSystem / Game
+                       (na końcu startuje window.onload)
+       6. editor.js  – klasa LevelEditor do edycji poziomów
+  ════════════════════════════════════════════════════════════ -->
+  <!--
+    Dane poziomów wbudowane jako JS – brak potrzeby serwera HTTP.
+    Każdy plik zapisuje dane do window.LEVEL_DATA['maps/levelX.json'].
+    Aby dodać nowy poziom: stwórz maps/level3.js i dopisz ścieżkę w config.js.
+  -->
+  <script src="maps/level1.js"></script>
+  <script src="maps/level2.js"></script>
+  <script src="maps/level3.js"></script>
+  <script src="maps/level4.js"></script>
+  <script src="maps/level5.js"></script>
+
+  <!-- Silnik gry – kolejność ładowania jest WAŻNA -->
+  <script src="src/config.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/level.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/enemy.js"></script>
+  <script src="src/game.js"></script>
+  <script src="src/editor.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       INICJALIZACJA UI (poza logiką gry)
+  ════════════════════════════════════════════════════════════ -->
+  <script>
+    // ──────────────────────────────────────────────────────────
+    //  Ukryj ekran ładowania gdy canvas jest gotowy
+    // ──────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+
+      const loader = document.getElementById('initial-loader');
+
+      // Poczekaj na wypełnienie paska postępu (1.2s animacja CSS)
+      setTimeout(() => {
+        loader.classList.add('hidden');
+        // Usuń z DOM po zakończeniu przejścia
+        loader.addEventListener('transitionend', () => loader.remove(), { once: true });
+      }, 1400);
+
+      // Fokus na canvas – by klawiatura działała od razu
+      const canvas = document.getElementById('gameCanvas');
+      canvas.focus();
+
+    });
+
+    // ──────────────────────────────────────────────────────────
+    //  Wizualne podświetlenie klawiszy w stopce
+    // ──────────────────────────────────────────────────────────
+    const KEY_MAP = {
+      'ArrowLeft': 'key-left',
+      'KeyA': 'key-left',
+      'ArrowRight': 'key-right',
+      'KeyD': 'key-right',
+      'ArrowUp': 'key-up',
+      'KeyW': 'key-up',
+      'Space': 'key-space',
+      'ShiftLeft': 'key-shift',
+      'ShiftRight': 'key-shift',
+      'Escape': 'key-esc',
+      'KeyP': 'key-esc',
+    };
+
+    window.addEventListener('keydown', e => {
+      const badgeId = KEY_MAP[e.code];
+      if (badgeId) {
+        const el = document.getElementById(badgeId);
+        if (el) el.classList.add('pressed');
+      }
+    });
+
+    window.addEventListener('keyup', e => {
+      const badgeId = KEY_MAP[e.code];
+      if (badgeId) {
+        const el = document.getElementById(badgeId);
+        if (el) el.classList.remove('pressed');
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────
+    //  Obsługa utraty fokusu – pauza gry
+    // ──────────────────────────────────────────────────────────
+    window.addEventListener('blur', () => {
+      // Jeśli gra działa, wstaw ją na pause przez zmianę stanu
+      if (window._game && window._game.state === 'playing') {
+        window._game.state = 'paused';
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────
+    //  Zapobiegaj wyświetlaniu kontekstowego menu na canvasie
+    // ──────────────────────────────────────────────────────────
+    document.getElementById('gameCanvas')?.addEventListener('contextmenu', e => {
+      e.preventDefault();
+    });
+
+    // ──────────────────────────────────────────────────────────
+    //  Obsługa przełączania zakładek GRA / EDYTOR
+    // ──────────────────────────────────────────────────────────
+    const tabGame = document.getElementById('tab-game');
+    const tabEditor = document.getElementById('tab-editor');
+    const containerGame = document.getElementById('game-container');
+    const containerEditor = document.getElementById('editor-container');
+
+    tabGame.addEventListener('click', () => {
+      tabGame.classList.add('active');
+      tabEditor.classList.remove('active');
+      containerGame.classList.remove('hidden');
+      containerEditor.classList.add('hidden');
+      
+      // Wznów muzykę i grę jeśli była zapauzowana przez przejście do edytora
+      if (window._game) {
+        if (window._game.state === 'paused') {
+          window._game.state = 'playing';
+          window._game.audio.startBgm();
+        }
+        window._game.canvas.focus();
+      }
+    });
+
+    tabEditor.addEventListener('click', () => {
+      tabEditor.classList.add('active');
+      tabGame.classList.remove('active');
+      containerEditor.classList.remove('hidden');
+      containerGame.classList.add('hidden');
+
+      // Zatrzymaj muzykę i grę (pauza) po wejściu do edytora
+      if (window._game) {
+        if (window._game.state === 'playing') {
+          window._game.state = 'paused';
+          window._game.audio.stopBgm();
+        }
+      }
+
+      // Zainicjuj edytor przy pierwszym otwarciu
+      if (window._editor) {
+        if (!window._editor.initialized) {
+          window._editor.init();
+          window._editor.initialized = true;
+        } else {
+          // Załaduj ponownie, żeby zsynchronizować aktualny poziom
+          window._editor.loadLevel(window._editor.currentLevelIndex);
+        }
+      }
+    });
+  </script>
+
+</body>
+
+</html>

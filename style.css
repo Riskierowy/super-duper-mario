@@ -1,0 +1,1138 @@
+/* ============================================================
+   style.css – Stylizacja gry Super Mario JS
+   ============================================================
+   Zawiera:
+   - Reset CSS i typografia
+   - Tło strony i layout
+   - Stylizacja canvas (ekran gry)
+   - Nakładki: loading, skanlines, ramka ekranu
+   - Responsywność
+   - Animacje CSS
+   ============================================================ */
+
+/* ─────────────────────────────────────────────────────────────
+   IMPORT CZCIONKI PIXEL-ART (Google Fonts)
+───────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────
+   RESET I ZMIENNE CSS
+───────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Paleta kolorów */
+  --clr-bg-outer: #000000;
+  --menu-bg: linear-gradient(135deg, rgba(13, 13, 26, 0.92), rgba(22, 33, 62, 0.95));
+  --clr-bg-inner: #16213e;
+  --clr-accent: #5C94FC;
+  --clr-gold: #FFD700;
+  --clr-red: #E83030;
+  --clr-green: #38A038;
+  --clr-white: #FFFFFF;
+  --clr-ui-dark: rgba(0, 0, 0, 0.75);
+
+  /* Rozmiary */
+  --canvas-w: 800px;
+  --canvas-h: 480px;
+  --border-r: 8px;
+
+  /* Czcionki */
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-ui: 'Inter', sans-serif;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BODY – TAŁO STRONY
+───────────────────────────────────────────────────────────── */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  /* enable scrolling both directions */
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+
+  /* Ciemne tło z gradientem – gwiazdy pikselowe */
+  background-color: var(--clr-bg-outer);
+  background-image:
+    radial-gradient(ellipse at 20% 30%, rgba(92, 148, 252, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(232, 48, 48, 0.10) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='10'  cy='15'  r='1' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='50'  cy='40'  r='1' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='90'  cy='8'   r='1' fill='rgba(255,255,255,0.5)'/%3E%3Ccircle cx='130' cy='55'  r='1' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='170' cy='20'  r='1' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='30'  cy='80'  r='1' fill='rgba(255,255,255,0.25)'/%3E%3Ccircle cx='70'  cy='100' r='1' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='110' cy='75'  r='1' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='150' cy='95'  r='1' fill='rgba(255,255,255,0.5)'/%3E%3Ccircle cx='190' cy='60'  r='1' fill='rgba(255,255,255,0.35)'/%3E%3Ccircle cx='20'  cy='140' r='1' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='60'  cy='160' r='1' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='100' cy='130' r='1' fill='rgba(255,255,255,0.25)'/%3E%3Ccircle cx='140' cy='170' r='1' fill='rgba(255,255,255,0.5)'/%3E%3Ccircle cx='180' cy='145' r='1' fill='rgba(255,255,255,0.35)'/%3E%3C/svg%3E");
+  background-size: auto, auto, 200px 200px;
+
+  font-family: var(--font-ui);
+  color: var(--clr-white);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   GŁÓWNY KONTENER GRY
+───────────────────────────────────────────────────────────── */
+#game-wrapper {
+  background: var(--menu-bg);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 28px 16px;
+  border-radius: 16px;
+
+  /* Subtle border matching the canvas frame */
+  border: 1px solid rgba(92, 148, 252, 0.18);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(92, 148, 252, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* Efekt backdrop-filter (glassmorphism) */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  /* Subtelna animacja wejścia */
+  animation: fadeInScale 0.6s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NAGŁÓWEK (tytuł nad canvasem)
+───────────────────────────────────────────────────────────── */
+#game-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: var(--canvas-w);
+}
+
+#game-title {
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--clr-gold);
+  text-shadow:
+    2px 2px 0 #C09000,
+    0 0 20px rgba(255, 215, 0, 0.4);
+
+  /* Pulsujące podświetlenie tytułu */
+  animation: titleGlow 3s ease-in-out infinite;
+}
+
+@keyframes titleGlow {
+
+  0%,
+  100% {
+    text-shadow: 2px 2px 0 #C09000, 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  50% {
+    text-shadow: 2px 2px 0 #C09000, 0 0 40px rgba(255, 215, 0, 0.7);
+  }
+}
+
+#game-subtitle {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 1px;
+  margin-left: auto;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RAMKA EKRANU (arcade cabinet feel)
+───────────────────────────────────────────────────────────── */
+#canvas-frame {
+  position: relative;
+  width: var(--canvas-w);
+  height: var(--canvas-h);
+
+  /* Wielowarstwowa ramka jak monitor arcade */
+  border-radius: var(--border-r);
+  box-shadow:
+    /* Wewnętrzna poświata niebieskawa */
+    inset 0 0 30px rgba(92, 148, 252, 0.08),
+    /* Błyszcząca krawędź górna */
+    0 1px 0 rgba(255, 255, 255, 0.15),
+    /* Cień główny */
+    0 8px 32px rgba(0, 0, 0, 0.7),
+    /* Kolorowa poświata zewnętrzna */
+    0 0 60px rgba(92, 148, 252, 0.18),
+    0 0 120px rgba(232, 48, 48, 0.08);
+
+  /* Obramowanie gradientowe */
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--clr-bg-outer), var(--clr-bg-outer)) padding-box,
+    linear-gradient(135deg,
+      rgba(255, 215, 0, 0.6) 0%,
+      rgba(92, 148, 252, 0.4) 30%,
+      rgba(232, 48, 48, 0.4) 70%,
+      rgba(255, 215, 0, 0.6) 100%) border-box;
+
+  overflow: hidden;
+
+  /* Animacja ramki */
+  animation: framePulse 4s ease-in-out infinite;
+}
+
+@keyframes framePulse {
+
+  0%,
+  100% {
+    box-shadow: inset 0 0 30px rgba(92, 148, 252, 0.08), 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 60px rgba(92, 148, 252, 0.18);
+  }
+
+  50% {
+    box-shadow: inset 0 0 30px rgba(92, 148, 252, 0.15), 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 80px rgba(92, 148, 252, 0.28);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   CANVAS – główne płótno gry
+───────────────────────────────────────────────────────────── */
+#gameCanvas {
+  display: block;
+  width: var(--canvas-w);
+  height: var(--canvas-h);
+  border-radius: calc(var(--border-r) - 2px);
+
+  /* Pixel-art rendering – brak rozmycia przy skalowaniu */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+
+  cursor: none;
+  /* ukryj kursor myszy nad canvasem */
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NAKŁADKA SCANLINES (efekt starego monitora CRT)
+───────────────────────────────────────────────────────────── */
+#canvas-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: calc(var(--border-r) - 2px);
+  z-index: 10;
+
+  /* Poziome linie skanowania */
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.06) 2px,
+      rgba(0, 0, 0, 0.06) 4px);
+
+  /* Winietowanie – ciemniejsze rogi */
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   NAKŁADKA POŁYSKU (odbicie światła na górze ekranu)
+───────────────────────────────────────────────────────────── */
+#canvas-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  pointer-events: none;
+  border-radius: calc(var(--border-r) - 2px) calc(var(--border-r) - 2px) 0 0;
+  z-index: 11;
+
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.04) 0%,
+      transparent 100%);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   PANEL DOLNY – skróty klawiszowe
+───────────────────────────────────────────────────────────── */
+#game-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: var(--canvas-w);
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+
+.key-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.5px;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  min-width: 22px;
+  height: 18px;
+
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+
+  /* Efekt przycisku klawiatury */
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  transition: all 0.1s ease;
+}
+
+/* Efekt naciśnięcia klawisza (JS dodaje klasę .pressed) */
+.key-badge.pressed {
+  transform: translateY(1px);
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-bottom-width: 1px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WERSJA / STOPKA
+───────────────────────────────────────────────────────────── */
+#game-version {
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   WSKAŹNIK ŁADOWANIA (widoczny zanim canvas się zainicjuje)
+───────────────────────────────────────────────────────────── */
+#initial-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: #0d0d1a;
+  transition: opacity 0.5s ease;
+}
+
+#initial-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loader-title {
+  font-family: var(--font-pixel);
+  font-size: 18px;
+  color: var(--clr-gold);
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  animation: titleGlow 1.5s ease-in-out infinite;
+}
+
+#loader-bar-wrap {
+  width: 300px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+#loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--clr-accent), var(--clr-gold));
+  border-radius: 7px;
+  animation: loaderFill 1.2s ease-out forwards;
+  box-shadow: 0 0 12px rgba(92, 148, 252, 0.6);
+}
+
+@keyframes loaderFill {
+  0% {
+    width: 0%;
+  }
+
+  60% {
+    width: 80%;
+  }
+
+  80% {
+    width: 90%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+#loader-text {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 2px;
+  animation: loaderBlink 0.8s step-end infinite;
+}
+
+@keyframes loaderBlink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Pixel-art logo na ekranie ładowania */
+#loader-logo {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.logo-block {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  animation: logoBlockBounce 1s ease-in-out infinite;
+}
+
+.logo-block:nth-child(1) {
+  background: #E83030;
+  animation-delay: 0.0s;
+}
+
+.logo-block:nth-child(2) {
+  background: #F8B800;
+  animation-delay: 0.1s;
+}
+
+.logo-block:nth-child(3) {
+  background: #38A038;
+  animation-delay: 0.2s;
+}
+
+.logo-block:nth-child(4) {
+  background: #5C94FC;
+  animation-delay: 0.3s;
+}
+
+.logo-block:nth-child(5) {
+  background: #E83030;
+  animation-delay: 0.4s;
+}
+
+@keyframes logoBlockBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RESPONSYWNOŚĆ – skaluj grę na mniejszych ekranach
+───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  :root {
+    --canvas-w: 100vw;
+    --canvas-h: calc(100vw * 0.6);
+    /* proporcja 800:480 = 5:3 */
+  }
+
+  #game-wrapper {
+    gap: 6px;
+  }
+
+  #game-header,
+  #game-footer {
+    width: 100vw;
+    padding: 0 8px;
+  }
+
+  #game-footer {
+    gap: 10px;
+  }
+
+  .key-hint {
+    font-size: 6px;
+  }
+}
+
+@media (max-width: 520px) {
+  #game-footer {
+    display: none;
+    /* ukryj podpowiedzi na bardzo małych ekranach */
+  }
+
+  #game-header {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+
+  #game-subtitle {
+    margin-left: 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SCROLLBAR (ukryj domyślne paski przewijania strony)
+───────────────────────────────────────────────────────────── */
+/* Hide scrollbars globally for body only */
+/* Scrollbar hiding removed to enable page scrolling */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure editor viewport can scroll */
+#editor-viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: auto;
+  -ms-overflow-style: auto;
+  width: max-content;
+  /* allow viewport to expand with canvas */
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ZAKŁADKI GRY I EDYTORA
+───────────────────────────────────────────────────────────── */
+#app-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  width: var(--canvas-w);
+  margin-bottom: 4px;
+  margin-top: 4px;
+}
+
+.tab-btn {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--border-r);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--clr-white);
+  border-color: rgba(92, 148, 252, 0.5);
+  box-shadow: 0 0 10px rgba(92, 148, 252, 0.2);
+}
+
+.tab-btn.active {
+  background: rgba(92, 148, 252, 0.15);
+  border-color: var(--clr-accent);
+  color: var(--clr-white);
+  box-shadow:
+    0 0 15px rgba(92, 148, 252, 0.4),
+    inset 0 0 5px rgba(92, 148, 252, 0.2);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.tab-content.hidden {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STYLIZACJA PANELU KONTROLNEGO EDYTORA
+───────────────────────────────────────────────────────────── */
+#editor-container {
+  width: auto;
+  min-width: var(--canvas-w);
+}
+
+.editor-top-panel {
+  width: 100%;
+  background: var(--clr-ui-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--border-r);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+}
+
+.panel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+}
+
+.panel-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.editor-select,
+.editor-input {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: var(--clr-white);
+  padding: 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.editor-select:focus,
+.editor-input:focus {
+  border-color: var(--clr-accent);
+  box-shadow: 0 0 5px rgba(92, 148, 252, 0.5);
+}
+
+.editor-select {
+  cursor: pointer;
+}
+
+.editor-input {
+  width: 60px;
+  text-align: center;
+}
+
+/* Przyciski w edytorze */
+.editor-btn {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: var(--clr-white);
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.editor-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.editor-btn:active {
+  transform: translateY(1px);
+}
+
+.btn-icon {
+  font-size: 9px;
+}
+
+.btn-success {
+  background: rgba(56, 160, 56, 0.25);
+  border-color: var(--clr-green);
+}
+
+.btn-success:hover {
+  background: rgba(56, 160, 56, 0.45);
+  box-shadow: 0 0 10px rgba(56, 160, 56, 0.4);
+}
+
+.btn-primary {
+  background: rgba(92, 148, 252, 0.25);
+  border-color: var(--clr-accent);
+}
+
+.btn-primary:hover {
+  background: rgba(92, 148, 252, 0.45);
+  box-shadow: 0 0 10px rgba(92, 148, 252, 0.4);
+}
+
+.btn-info {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: var(--clr-gold);
+  color: var(--clr-gold);
+}
+
+.btn-info:hover {
+  background: rgba(255, 215, 0, 0.35);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.btn-danger {
+  background: rgba(232, 48, 48, 0.25);
+  border-color: var(--clr-red);
+}
+
+.btn-danger:hover {
+  background: rgba(232, 48, 48, 0.45);
+  box-shadow: 0 0 10px rgba(232, 48, 48, 0.4);
+}
+
+.editor-btn.active {
+  background: var(--clr-white) !important;
+  color: #000 !important;
+  border-color: var(--clr-white);
+  font-weight: bold;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   UKŁAD GŁÓWNY EDYTORA (PALETA + KANWAS)
+───────────────────────────────────────────────────────────── */
+/* Ensure the editor layout keeps the palette visible and allows horizontal scrolling of the level canvas */
+.editor-main-layout {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  overflow-x: hidden;
+  /* prevent layout scroll */
+  align-items: flex-start;
+}
+
+/* Keep palette at fixed width */
+.editor-palette-container {
+  flex: 0 0 180px;
+  /* fixed width */
+  height: auto;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Scale down the editor viewport for a more compact view */
+.editor-viewport-frame {
+  flex: 1 1 auto;
+  transform: scale(0.85);
+  /* downscale to 85% */
+  transform-origin: top left;
+  width: calc(var(--canvas-w) * 0.85);
+  overflow: hidden;
+}
+
+/* Make the viewport scrollable horizontally to view the whole level */
+#editor-viewport {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: none;
+}
+
+/* Ensure the canvas does not shrink */
+#editorCanvas {
+  min-width: max-content;
+}
+
+display: flex;
+gap: 12px;
+width: 100%;
+}
+
+/* Paleta elementów */
+.editor-palette-container {
+  width: 180px;
+  height: 520px;
+  background: var(--clr-ui-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--border-r);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+}
+
+.palette-title {
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  color: var(--clr-gold);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  border-left: 2px solid var(--clr-gold);
+  padding-left: 6px;
+}
+
+.palette-items {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.palette-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.palette-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(92, 148, 252, 0.4);
+}
+
+.palette-btn.active {
+  background: rgba(92, 148, 252, 0.2);
+  border-color: var(--clr-accent);
+  box-shadow: inset 0 0 5px rgba(92, 148, 252, 0.3);
+}
+
+.palette-label {
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.palette-btn.active .palette-label {
+  color: var(--clr-white);
+  font-weight: bold;
+}
+
+/* Podglądy kafelków i przeciwników */
+.tile-preview,
+.enemy-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.tile-1 {
+  background: #58A848;
+  border-top: 4px solid #7CE468;
+}
+
+/* ziemia */
+.tile-2 {
+  background: #C84C0C;
+  background-image: linear-gradient(45deg, #A03808 25%, transparent 25%), linear-gradient(-45deg, #A03808 25%, transparent 25%);
+  background-size: 8px 8px;
+}
+
+/* cegla */
+.tile-3 {
+  background: #F8B800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tile-3::after {
+  content: '?';
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: #FFF;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.tile-4 {
+  background: #555;
+}
+
+/* twarda platforma */
+.tile-5 {
+  background: #38A038;
+  border-top: 5px solid #50C050;
+  border-left: 2px solid #50C050;
+  border-right: 2px solid #28882A;
+}
+
+/* rura gora */
+.tile-6 {
+  background: #38A038;
+  border-left: 3px solid #60D060;
+  border-right: 3px solid #28882A;
+}
+
+/* rura dol */
+.tile-7 {
+  background: #FFD700;
+  border-radius: 50%;
+  box-shadow: inset -2px -2px 0 #C09000, 0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+/* moneta */
+.tile-8 {
+  background: #E83030;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+/* spawn */
+.tile-8::after {
+  content: 'S';
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: bold;
+  color: #FFF;
+}
+
+.tile-9 {
+  background: #D8D8D8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* flaga */
+.tile-9::after {
+  content: '🚩';
+  font-size: 12px;
+}
+
+.tile-10 {
+  background: #A07000;
+  border: 1px solid #604000;
+}
+
+/* zuzyty */
+.tile-11 {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px 8px 4px 4px;
+}
+
+/* chmura */
+.tile-12 {
+  background: #8A3E18;
+  border: 1px solid #5E260A;
+}
+
+/* ziemia podziemna */
+.tile-13 {
+  background: url('assets/textures/tiles/tile_pipe_variant.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.enemy-preview {
+  border-radius: 50%;
+}
+
+.enemy-goomba {
+  background: #A84000;
+  border: 2px solid #703000;
+}
+
+.enemy-goomba::after {
+  content: '👁️';
+  font-size: 8px;
+  position: absolute;
+  top: 2px;
+  left: 4px;
+}
+
+.enemy-koopa {
+  background: #30A030;
+  border: 2px solid #206020;
+}
+
+.enemy-koopa::after {
+  content: '🐢';
+  font-size: 10px;
+  position: absolute;
+  top: 1px;
+  left: 2px;
+}
+
+/* Okno podglądu z płótnem */
+.editor-viewport-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 520px;
+}
+
+#editor-viewport {
+  width: 100%;
+  height: 480px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #5C94FC;
+  border: 2px solid var(--clr-accent);
+  border-radius: var(--border-r);
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.45),
+    0 8px 32px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+#editorCanvas {
+  display: block;
+  height: 480px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: crosshair;
+}
+
+/* Wymuś pokazanie paska przewijania w edytorze */
+#editor-viewport::-webkit-scrollbar {
+  display: block !important;
+  height: 12px;
+}
+
+#editor-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 calc(var(--border-r) - 2px) calc(var(--border-r) - 2px);
+}
+
+#editor-viewport::-webkit-scrollbar-thumb {
+  background: var(--clr-accent);
+  border-radius: 6px;
+  border: 3px solid rgba(0, 0, 0, 0.4);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+#editor-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--clr-gold);
+}
+
+/* Stopka edytora */
+.editor-status-bar {
+  background: var(--clr-ui-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 6px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+#editor-status-coords {
+  font-family: var(--font-pixel);
+  font-size: 6px;
+  color: var(--clr-gold);
+}
+
+#editor-status-info {
+  max-width: 70%;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Powiadomienia TOAST w edytorze */
+#editor-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(56, 160, 56, 0.95);
+  border: 2px solid var(--clr-green);
+  color: var(--clr-white);
+  padding: 12px 24px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  z-index: 99999;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(56, 160, 56, 0.4);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+#editor-toast.editor-toast-visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+#editor-toast.error {
+  background: rgba(232, 48, 48, 0.95);
+  border-color: var(--clr-red);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(232, 48, 48, 0.4);
+}
