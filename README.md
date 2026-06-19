@@ -4,11 +4,6 @@
 
 The classic plumber platformer, rebuilt with a Polish soul. New hero, a capital city for a final stage, a built-in map editor, and three ways to lose your last life — from a Sunday stroll to a total nightmare.
 
-## 🎮 Play
-
-**▶ PLAY NOW**
-
-**▶ PLAY THE GAME**
 
 Five levels. Three difficulties. One flag waiting at the end.
 
